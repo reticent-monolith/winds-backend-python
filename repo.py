@@ -1,4 +1,9 @@
-import pymongo, datetime, enum, pprint, bson
+import pymongo
+import datetime
+import enum
+import pprint
+import bson
+
 
 class Slider(enum.Enum):
     BLACK = 1
@@ -9,8 +14,9 @@ class Slider(enum.Enum):
     def __str__(self):
         return self.name
 
+
 class Rider:
-    def __init__(self, weight, trolley, front=None, middle=None, rear=None, added=0, speed = 0):
+    def __init__(self, weight, trolley, front=None, middle=None, rear=None, added=0, speed=0):
         self.weight = weight
         self.trolley = trolley
         self.frontSlider = front
@@ -18,19 +24,20 @@ class Rider:
         self.rearSlider = rear
         self.addedWeight = added
         self.speed = speed
-    
+
     @classmethod
     def from_dict(cls, d):
         return cls(
-            weight = d['weight'],
-            trolley = d['trolley'],
-            front = d['frontSlider'],
-            middle = d['middleSlider'],
-            rear = d['rearSlider'],
-            added = d['addedWeight'],
-            speed = d['speed']
+            weight=d['weight'],
+            trolley=d['trolley'],
+            front=d['frontSlider'] if 'frontSlider' in d.keys() else None,
+            middle=d['middleSlider'] if 'middleSlider' in d.keys() else None,
+            rear=d['rearSlider'] if 'rearSlider' in d.keys() else None,
+            added=d['addedWeight'] if 'addedWeight' in d.keys() else None,
+            speed=d['speed'] if 'speed' in d.keys() else None
         )
-    
+
+
 class Dispatch:
     def __init__(self, wind_deg, wind_spd, bt, inst, date, time, comment="", riders={'1': None, '2': None, '3': None, '4': None}, _id=None):
         self.riders = riders
@@ -56,26 +63,29 @@ class Dispatch:
             'btRadio': self.bt_radio,
             'windsInstructor': self.winds_instructor,
             'comment': self.comment,
-            '_id': str(self._id)
+            '_id': str(self._id) 
         }
 
     @classmethod
     def from_dict(cls, d):
         return cls(
-            wind_deg = d['windDegrees'],
-            wind_spd = d['windSpeed'],
-            bt = d['btRadio'],
-            inst = d['windsInstructor'],
-            date = d['date'],
-            time = d['time'],
-            comment = d['comment'],
-            riders = {line: Rider.from_dict(rider) for line, rider in d['riders'].items()},
-            _id = bson.ObjectId(d['_id']) if '_id' in d.keys() else None
+            wind_deg=d['windDegrees'],
+            wind_spd=d['windSpeed'],
+            bt=d['btRadio'],
+            inst=d['windsInstructor'],
+            date=d['date'],
+            time=d['time'],
+            comment=d['comment'],
+            riders={line: Rider.from_dict(rider)
+                    for line, rider in d['riders'].items()},
+            _id=bson.ObjectId(d['_id']) if '_id' in d.keys() else bson.ObjectId()
         )
+
 
 class DispatchRepo:
     def __init__(self, conn_str):
-        self._conn = pymongo.MongoClient(conn_str, serverSelectionTimeoutMS=5000)
+        self._conn = pymongo.MongoClient(
+            conn_str, serverSelectionTimeoutMS=5000)
         self._db = self._conn.zw
         self._collection = self._db.winds
 
