@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, make_response
-from repo import DispatchRepo, Dispatch
+from repos.mongo import MongoDispatchRepo
+from models.dispatch import Dispatch
 
 CONN_STR = "mongodb://localhost:27017"
 
 app = Flask(__name__)
-db = DispatchRepo(CONN_STR)
+db = MongoDispatchRepo(CONN_STR)
 
 @app.route('/bydate/<date>')
 def by_date(date):
@@ -29,7 +30,7 @@ def add():
             db.add(dispatch)
             print(f"Added to db: {dispatch}")
         except Exception as e:
-            return make_response("Something went wrong", 501)
+            return make_response("Something went wrong when adding Dispatch to the database", 501)
         response = make_response("", 200)
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response
